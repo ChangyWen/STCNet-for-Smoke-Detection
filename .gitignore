@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+/data/
+/.idea/
+/archive/
+/Plot/
+/src/cache
+/src/test.py
+/src/plot_fair.py
+.DS_Store
+*.out
+*.txt
+*.pdf
+*.png
+*.sh
+*.zip
+/output/
+/plot_src/
