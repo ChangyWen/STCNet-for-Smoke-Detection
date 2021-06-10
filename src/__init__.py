@@ -1,4 +1,4 @@
-__all__=['utils', 'main', 'test']
+__all__=['utils', 'main', 'model']
 
 import os
 import sys
