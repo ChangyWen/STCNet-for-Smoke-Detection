@@ -3,8 +3,6 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torchsummary import summary
 from collections import OrderedDict
 from senet import se_resnext50_32x4d, se_resnext101_32x4d
 

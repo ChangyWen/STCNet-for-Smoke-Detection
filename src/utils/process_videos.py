@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
 import sys
 from util import *
-import numpy as np
 from optical_flow.optical_flow import OpticalFlow
 from multiprocessing import Pool
 

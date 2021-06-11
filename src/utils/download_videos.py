@@ -1,8 +1,8 @@
-import sys
-import urllib.request
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import sys
+import urllib.request
 from util import *
 
 # Download all videos in the metadata json file

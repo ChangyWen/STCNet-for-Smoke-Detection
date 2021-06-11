@@ -1,12 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from os import name
 import sys
-from collections import defaultdict
-import json
-import numpy as np
-import copy
 from util import *
 
 def split_and_save_data(vm, target_key_type, method="assign", no_link=False):
