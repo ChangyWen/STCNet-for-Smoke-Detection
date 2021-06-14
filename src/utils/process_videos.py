@@ -17,27 +17,41 @@ cv.setNumThreads(12)
 
 # Process videos into rgb frame files and optical flow files
 # The file format is numpy.array
+
+def init(res):
+    global resolution
+    resolution = res[0]
+
 def main(argv):
+    resolution = 180
+    if len(argv) > 1:
+        if argv[1] not in ['320', '180']: raise AttributeError('resolution')
+        resolution = int(argv[1])
+
     rgb_dir = "../data/rgb/"
     flow_dir = "../data/flow/"
     metadata_path = "../data/metadata.json"
-    num_workers = 1
+    num_workers = 2
 
     # Check for saving directories and create if they don't exist
     check_and_create_dir(rgb_dir)
     check_and_create_dir(flow_dir)
 
     metadata = load_json(metadata_path)
-    p = Pool(num_workers)
+    p = Pool(num_workers, initializer=init, initargs=(resolution,))
     p.map(compute_and_save_flow, metadata)
     print("Done process_videos.py")
 
 
 def compute_and_save_flow(video_data):
+    if resolution == 320:
+        file_name = video_data['file_name'].replace('-180-180-', '-320-320-')
+    else:
+        file_name = video_data["file_name"]
+    # file_name = video_data["file_name"]
     video_dir = "../data/videos/"
     rgb_dir = "../data/rgb/"
     flow_dir = "../data/flow/"
-    file_name = video_data["file_name"]
     rgb_vid_in_p = str(video_dir + file_name + ".mp4")
     rgb_4d_out_p = str(rgb_dir + file_name + ".npy")
     flow_4d_out_p = str(flow_dir + file_name + ".npy")
