@@ -218,12 +218,12 @@ def main(argv):
         return
 
     vm = load_json("../data/metadata.json")
-    vm = aggregate_label(vm)
     if resolution == 320:
         for item in vm:
             item['file_name'] = item['file_name'].replace('-180-180-', '-320-320-')
             item["url_root"] = item["url_root"].replace('/180/', '/320/')
             item['url_part'] = item['url_part'].replace('-180-180-', '-320-320-')
+    vm = aggregate_label(vm)
     method = "assign"
     no_link = True
     split_and_save_data(vm, "date", method=method, no_link=no_link)
