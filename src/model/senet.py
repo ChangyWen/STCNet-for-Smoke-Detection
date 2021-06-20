@@ -2,34 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import math
+from src.utils.util import pretrained_settings
 import torch.nn as nn
 from torch.utils import model_zoo
 from collections import OrderedDict
-
-pretrained_settings = {
-    'se_resnext50_32x4d': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [0.485, 0.456, 0.406],
-            'std': [0.229, 0.224, 0.225],
-            'num_classes': 1000
-        }
-    },
-    'se_resnext101_32x4d': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [0.485, 0.456, 0.406],
-            'std': [0.229, 0.224, 0.225],
-            'num_classes': 1000
-        }
-    },
-}
 
 class Bottleneck(nn.Module):
     """

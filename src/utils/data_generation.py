@@ -3,11 +3,13 @@
 
 import cv2
 import numpy as np
-from util import load_json, split_list, random_scale, generate_random_crop_pos, random_crop_pad_to_shape
+from util import load_json, split_list, random_scale, generate_random_crop_pos, \
+    random_crop_pad_to_shape, normalize, pretrained_settings
 from torch.utils.data import Dataset, DataLoader
 
 class BaseDataset(Dataset):
-    def __init__(self, split_name='all', img_height=224, img_width=224, mode='train', segs_per_clip=8):
+    def __init__(self, split_name='all', img_height=224, img_width=224,
+                 mode='train', segs_per_clip=8, pretrained_model='se_resnext50_32x4d'):
         assert split_name in ['all', 's0', 's1', 's2', 's3', 's4', 's5'], split_name
         mapping = {'s0': 0, 's1': 1, 's2': 2, 's3': 3, 's4': 4, 's5': 5}
         self.rgb_path = '../data/rgb/'
@@ -39,6 +41,8 @@ class BaseDataset(Dataset):
         self.scale_array = [0.5, 0.75, 1, 1.5, 1.75, 2.0]
         self.flip_array = [-1, 0, 1]
         self.rotate_array = [0, 2]
+        self.mean = pretrained_settings[pretrained_model]
+        self.std = pretrained_settings[pretrained_model]
 
     def __len__(self):
         return len(self.data_list)
@@ -69,6 +73,7 @@ class BaseDataset(Dataset):
             crop_size = (self.img_height, self.img_width)
             crop_pos = generate_random_crop_pos(frame.shape[:2], crop_size)
             frame = random_crop_pad_to_shape(frame, crop_pos, crop_size, 0)
+            frame = normalize(frame, self.mean, self.std)
             processed_frames.append(frame)
         return np.stack(processed_frames, axis=0)
 

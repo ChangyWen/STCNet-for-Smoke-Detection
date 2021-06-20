@@ -30,6 +30,30 @@ from collections import OrderedDict
 import cv2
 import collections
 
+pretrained_settings = {
+    'se_resnext50_32x4d': {
+        'imagenet': {
+            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
+            'input_space': 'RGB',
+            'input_size': [3, 224, 224],
+            'input_range': [0, 1],
+            'mean': [0.485, 0.456, 0.406],
+            'std': [0.229, 0.224, 0.225],
+            'num_classes': 1000
+        }
+    },
+    'se_resnext101_32x4d': {
+        'imagenet': {
+            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth',
+            'input_space': 'RGB',
+            'input_size': [3, 224, 224],
+            'input_range': [0, 1],
+            'mean': [0.485, 0.456, 0.406],
+            'std': [0.229, 0.224, 0.225],
+            'num_classes': 1000
+        }
+    },
+}
 
 # Given an array of zeros and ones, output a list of events [[start_1, end_1], [start_2, end_2], ...]
 # (start_i and end_i means the starting and ending index in the array for each event)
@@ -59,7 +83,6 @@ def array_to_event(array, max_len=None):
                 if max_len != None and i-event[-1][0]+1 >= max_len:
                     array[i+1] = 0 # restart next event
     return event
-
 
 # Test the array_to_event function
 def test_array_to_event():
@@ -489,3 +512,9 @@ def random_crop_pad_to_shape(img, crop_pos, crop_size, pad_label_value):
     img_, margin = pad_image_to_shape(img_crop, crop_size, cv2.BORDER_REFLECT_101,
                                       pad_label_value)
     return img_, margin
+
+def normalize(img, mean, std):
+    img = img.astype(np.float32) / 255.0
+    img = img - mean
+    img = img / std
+    return img
