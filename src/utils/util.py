@@ -518,3 +518,7 @@ def normalize(img, mean, std):
     img = img - mean
     img = img / std
     return img
+
+def ensure_dir(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
