@@ -205,16 +205,25 @@ def aggregate_label(vm, add_weight=True):
 # Split metadata into training, validation, and test sets
 def main(argv):
     # Check
-    if len(argv) > 1:
+    if len(argv) > 2:
         if argv[1] != "confirm":
-            print("Must confirm by running: python split_metadata.py confirm")
+            print("Must run: python split_metadata.py confirm (180 or 320)")
             return
+        if argv[2] not in ['320', '180']:
+            print("Must run: python split_metadata.py confirm (180 or 320)")
+            return
+        resolution = int(argv[2])
     else:
-        print("Must confirm by running: python split_metadata.py confirm")
+        print("Must run: python split_metadata.py confirm (180 or 320)")
         return
 
     vm = load_json("../data/metadata.json")
     vm = aggregate_label(vm)
+    if resolution == 320:
+        for item in vm:
+            item['file_name'] = item['file_name'].replace('-180-180-', '-320-320-')
+            item["url_root"] = item["url_root"].replace('/180/', '/320/')
+            item['url_part'] = item['url_part'].replace('-180-180-', '-320-320-')
     method = "assign"
     no_link = True
     split_and_save_data(vm, "date", method=method, no_link=no_link)
