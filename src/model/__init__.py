@@ -1,4 +1,4 @@
-__all__=['network', 'senet']
+__all__=['network', 'senet', 'train_val', 'test']
 
 import os
 import sys

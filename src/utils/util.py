@@ -16,8 +16,8 @@ cv.setNumThreads(0)
 
 import json
 from collections import defaultdict
-from random import sample
 import torch
+import torch.nn as nn
 import numpy as np
 from moviepy.editor import ImageSequenceClip, clips_array
 from os import listdir
@@ -29,31 +29,7 @@ import time
 from collections import OrderedDict
 import cv2
 import collections
-
-pretrained_settings = {
-    'se_resnext50_32x4d': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [0.485, 0.456, 0.406],
-            'std': [0.229, 0.224, 0.225],
-            'num_classes': 1000
-        }
-    },
-    'se_resnext101_32x4d': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [0.485, 0.456, 0.406],
-            'std': [0.229, 0.224, 0.225],
-            'num_classes': 1000
-        }
-    },
-}
+from torch.utils import model_zoo
 
 # Given an array of zeros and ones, output a list of events [[start_1, end_1], [start_2, end_2], ...]
 # (start_i and end_i means the starting and ending index in the array for each event)
@@ -350,7 +326,7 @@ def confusion_matrix_of_samples(y_true, y_pred, n=None):
             for v in cm[u]:
                 s = cm[u][v] # get the items
                 if len(s) > n: # need to sample from the items
-                    cm[u][v] = sample(s, n)
+                    cm[u][v] = np.random.choice(s, n)
 
     return ddict_to_dict(cm)
 
@@ -409,6 +385,33 @@ def write_video_summary(cm, file_name, p_frame, p_save, global_step=None, fps=12
                 print(ex)
 
 
+'''wendacheng'''
+
+pretrained_settings = {
+    'se_resnext50_32x4d': {
+        'imagenet': {
+            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
+            'input_space': 'RGB',
+            'input_size': [3, 224, 224],
+            'input_range': [0, 1],
+            'mean': [0.485, 0.456, 0.406],
+            'std': [0.229, 0.224, 0.225],
+            'num_classes': 1000
+        }
+    },
+    'se_resnext101_32x4d': {
+        'imagenet': {
+            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth',
+            'input_space': 'RGB',
+            'input_size': [3, 224, 224],
+            'input_range': [0, 1],
+            'mean': [0.485, 0.456, 0.406],
+            'std': [0.229, 0.224, 0.225],
+            'num_classes': 1000
+        }
+    },
+}
+
 def load_model(model, model_file, is_restore=False):
     t_start = time.time()
     if isinstance(model_file, str):
@@ -448,6 +451,58 @@ def load_model(model, model_file, is_restore=False):
 
     return model
 
+def __init_weight(feature, bn_eps, bn_momentum, norm_layer, conv_init, **kwargs):
+    for name, m in feature.named_modules():
+        if isinstance(m, (nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d)):
+            conv_init(m.weight, **kwargs)
+        elif isinstance(m, norm_layer):
+            m.eps = bn_eps
+            m.momentum = bn_momentum
+            nn.init.constant_(m.weight, 1)
+            nn.init.constant_(m.bias, 0)
+
+def init_business_weight(
+        module_list, bn_eps, bn_momentum, norm_layer=nn.BatchNorm2d, conv_init=nn.init.kaiming_normal_, **kwargs
+):
+    if isinstance(module_list, list):
+        for feature in module_list:
+            __init_weight(feature, bn_eps, bn_momentum, norm_layer, conv_init, **kwargs)
+    else:
+        __init_weight(module_list, bn_eps, bn_momentum, norm_layer, conv_init, **kwargs)
+
+def initialize_pretrained_weight(model, settings, num_classes=1000):
+    assert num_classes == settings['num_classes'], \
+        'num_classes should be {}, but is {}'.format(
+            settings['num_classes'], num_classes)
+    model.load_state_dict(model_zoo.load_url(settings['url']), strict=False)
+    model.input_space = settings['input_space']
+    model.input_size = settings['input_size']
+    model.input_range = settings['input_range']
+    model.mean = settings['mean']
+    model.std = settings['std']
+
+def group_weight(module, lr, norm_layer=nn.BatchNorm2d, no_decay_lr=None):
+    group_decay = []
+    group_no_decay = []
+    for m in module.modules():
+        if isinstance(m, nn.Linear):
+            group_decay.append(m.weight)
+            if m.bias is not None:
+                group_no_decay.append(m.bias)
+        elif isinstance(m, (nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d)):
+            group_decay.append(m.weight)
+            if m.bias is not None:
+                group_no_decay.append(m.bias)
+        elif isinstance(m, norm_layer) or isinstance(m, (nn.GroupNorm, nn.InstanceNorm2d, nn.LayerNorm)):
+            if m.weight is not None:
+                group_no_decay.append(m.weight)
+            if m.bias is not None:
+                group_no_decay.append(m.bias)
+    assert len(list(module.parameters())) == len(group_decay) + len(group_no_decay)
+    group1 = dict(params=group_decay, lr=lr)
+    lr = lr if no_decay_lr is None else no_decay_lr
+    group2 = dict(params=group_no_decay, weight_decay=.0, lr=lr)
+    return [group1, group2]
 
 def split_list(target_list, n):
     if isinstance(target_list, int):

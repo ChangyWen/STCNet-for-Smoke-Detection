@@ -7,14 +7,14 @@ from collections import OrderedDict
 from senet import se_resnext50_32x4d, se_resnext101_32x4d
 
 class STCNet(nn.Module):
-    def __init__(self, backbone='se_resnext50'):
+    def __init__(self, backbone='se_resnext50_32x4d', pretrained='imagenet'):
         super(STCNet, self).__init__()
-        if backbone == 'se_resnext50':
-            self.spatial_path = se_resnext50_32x4d()
-            self.temporal_path = se_resnext50_32x4d()
+        if backbone == 'se_resnext50_32x4d':
+            self.spatial_path = se_resnext50_32x4d(pretrained=pretrained)
+            self.temporal_path = se_resnext50_32x4d(pretrained=pretrained)
         else:
-            self.spatial_path = se_resnext101_32x4d()
-            self.temporal_path = se_resnext101_32x4d()
+            self.spatial_path = se_resnext101_32x4d(pretrained=pretrained)
+            self.temporal_path = se_resnext101_32x4d(pretrained=pretrained)
         self.layer_cls = nn.Sequential(OrderedDict([
             ('conv1', nn.Conv2d(in_channels=2048, out_channels=256, kernel_size=(1, 1))),
             ('conv2', nn.Conv2d(in_channels=256, out_channels=256, kernel_size=(1, 1))),
@@ -32,7 +32,7 @@ class STCNet(nn.Module):
     def op_fuse(self, x1, x2):
         return torch.add(x1, x2)
 
-    def forward(self, rgb, residual, targets=None, training=True):
+    def forward(self, rgb, residual, targets=None, is_testing=False):
         # rgb_dim, residual_dim = rgb.ndimensions(), residual.ndimensions()
         # assert rgb_dim == residual_dim and rgb_dim == 5 # (B, T, C, H, W)
         B, T, C, H, W = rgb.size()
@@ -57,8 +57,8 @@ class STCNet(nn.Module):
         x0 = self.layer_cls(self.op_fuse(s4, t4))
         x0 = x0.unflatten(dim=0, sizes=torch.Size([B, T]))
         x0 = self.op_mean(x0)
-        x0 = x0.flatten(start_dim=1, end_dim=-1)
-        predictions = self.layer_out(x0)
+        x0 = torch.flatten(input=x0, start_dim=1, end_dim=-1)
+        preds = self.layer_out(x0)
 
-        loss = self.loss(predictions, targets) if training else None
-        return predictions, loss
+        loss = self.loss(preds, targets) if not is_testing else None
+        return preds, loss

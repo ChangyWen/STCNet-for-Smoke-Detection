@@ -7,9 +7,12 @@ from util import load_json, split_list, random_scale, generate_random_crop_pos, 
     random_crop_pad_to_shape, normalize, pretrained_settings
 from torch.utils.data import Dataset, DataLoader
 
+
 class BaseDataset(Dataset):
-    def __init__(self, split_name='all', img_height=224, img_width=224,
-                 mode='train', segs_per_clip=8, pretrained_model='se_resnext50_32x4d'):
+    def __init__(
+            self, split_name='all', img_height=224, img_width=224, mode='train',
+            segs_per_clip=8, backbone='se_resnext50_32x4d', pretrained='imagenet'
+    ):
         assert split_name in ['all', 's0', 's1', 's2', 's3', 's4', 's5'], split_name
         mapping = {'s0': 0, 's1': 1, 's2': 2, 's3': 3, 's4': 4, 's5': 5}
         self.rgb_path = '../data/rgb/'
@@ -41,8 +44,8 @@ class BaseDataset(Dataset):
         self.scale_array = [0.5, 0.75, 1, 1.5, 1.75, 2.0]
         self.flip_array = [-1, 0, 1]
         self.rotate_array = [0, 2]
-        self.mean = pretrained_settings[pretrained_model]
-        self.std = pretrained_settings[pretrained_model]
+        self.mean = pretrained_settings[backbone][pretrained]['mean']
+        self.std = pretrained_settings[backbone][pretrained]['std']
 
     def __len__(self):
         return len(self.data_list)
@@ -55,7 +58,7 @@ class BaseDataset(Dataset):
         frames = temp[:-1]
         res_frames = temp[1:] - frames
         label = info['label']
-        return (frames, res_frames, label)
+        return dict(frames=frames, res_frames=res_frames, label=label)
 
     def preprocess(self, frames):
         processed_frames = []
@@ -77,8 +80,12 @@ class BaseDataset(Dataset):
             processed_frames.append(frame)
         return np.stack(processed_frames, axis=0)
 
-def get_DataLoader(mode='train', batch_size=4, drop_last=True, is_shuffle=True, pin_memory=True):
-    dataset = BaseDataset(mode=mode)
+
+def get_DataLoader(
+        mode='train', backbone='se_resnext50_32x4d', pretrained='imagenet',
+        batch_size=4, drop_last=True, is_shuffle=True, pin_memory=True,
+):
+    dataset = BaseDataset(mode=mode, backbone=backbone, pretrained=pretrained)
     data_loader = DataLoader(
         dataset=dataset,
         batch_size=batch_size,
