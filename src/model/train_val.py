@@ -6,8 +6,6 @@ import os
 import sys
 from tqdm import tqdm
 import torch
-import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from network import STCNet
