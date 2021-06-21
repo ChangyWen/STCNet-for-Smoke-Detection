@@ -9,6 +9,8 @@ import torch.backends.cudnn as cudnn
 from model.train_val import train_val_run
 
 if __name__ == '__main__':
+    # TODO: multiple gpus
+    # TODO: arg parser
 
     '''DEVICE'''
     gpu_device = 0
