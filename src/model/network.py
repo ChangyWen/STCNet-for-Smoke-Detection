@@ -32,7 +32,7 @@ class STCNet(nn.Module):
     def op_fuse(self, x1, x2):
         return torch.add(x1, x2)
 
-    def forward(self, rgb, residual, targets=None, is_testing=True):
+    def forward(self, rgb, residual, target=None, is_testing=True):
         # rgb_dim, residual_dim = rgb.ndimensions(), residual.ndimensions()
         # assert rgb_dim == residual_dim and rgb_dim == 5 # (B, T, C, H, W)
         B, T, C, H, W = rgb.size()
@@ -60,5 +60,5 @@ class STCNet(nn.Module):
         x0 = torch.flatten(input=x0, start_dim=1, end_dim=-1)
         preds = self.layer_out(x0)
 
-        loss = self.loss(preds, targets) if not is_testing else None
+        loss = self.loss(preds, target) if not is_testing else None
         return preds, loss

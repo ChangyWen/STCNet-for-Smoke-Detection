@@ -14,6 +14,15 @@ class BaseLR():
     def get_lr(self, cur_iter): pass
 
 
+class ExponentialLR(BaseLR):
+    def __init__(self, start_lr, gamma, niters_per_epoch):
+        self.start_lr = start_lr
+        self.gamma = gamma
+        self.niters_per_epoch = niters_per_epoch
+
+    def get_lr(self, cur_iter):
+        return self.start_lr * self.gamma ** (cur_iter // self.niters_per_epoch)
+
 class PolyLR(BaseLR):
     def __init__(self, start_lr, lr_power, total_iters):
         self.start_lr = start_lr

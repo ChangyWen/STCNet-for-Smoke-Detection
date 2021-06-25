@@ -11,7 +11,6 @@ from utils.arg_parser import init_parser
 
 if __name__ == '__main__':
     # TODO: multiple gpus
-
     # TODO: use our own mean and std for normalization
 
     parser = init_parser()

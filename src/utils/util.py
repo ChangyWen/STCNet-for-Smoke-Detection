@@ -387,30 +387,33 @@ def write_video_summary(cm, file_name, p_frame, p_save, global_step=None, fps=12
 
 '''wendacheng'''
 
-pretrained_settings = {
-    'se_resnext50_32x4d': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [0.485, 0.456, 0.406], # imagenet
-            'std': [0.229, 0.224, 0.225], # imagenet
-            'num_classes': 1000
-        }
-    },
-    'se_resnext101_32x4d': {
-        'imagenet': {
-            'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth',
-            'input_space': 'RGB',
-            'input_size': [3, 224, 224],
-            'input_range': [0, 1],
-            'mean': [0.485, 0.456, 0.406],
-            'std': [0.229, 0.224, 0.225],
-            'num_classes': 1000
-        }
-    },
-}
+def get_pretrained_settings():
+    pretrained_settings = {
+        'se_resnext50_32x4d': {
+            'imagenet': {
+                'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext50_32x4d-a260b3a4.pth',
+                'input_space': 'RGB',
+                'input_size': [3, 224, 224],
+                'input_range': [0, 1],
+                'mean': [0.485, 0.456, 0.406],
+                'std': [0.229, 0.224, 0.225],
+                'num_classes': 1000
+            }
+        },
+        'se_resnext101_32x4d': {
+            'imagenet': {
+                'url': 'http://data.lip6.fr/cadene/pretrainedmodels/se_resnext101_32x4d-3b2fe3d8.pth',
+                'input_space': 'RGB',
+                'input_size': [3, 224, 224],
+                'input_range': [0, 1],
+                'mean': [0.485, 0.456, 0.406],
+                'std': [0.229, 0.224, 0.225],
+                'num_classes': 1000
+            }
+        },
+    }
+    return pretrained_settings
+
 
 def load_model(model, model_file, is_restore=False):
     t_start = time.time()
@@ -451,6 +454,7 @@ def load_model(model, model_file, is_restore=False):
 
     return model
 
+
 def __init_weight(feature, bn_eps, bn_momentum, norm_layer, conv_init, **kwargs):
     for name, m in feature.named_modules():
         if isinstance(m, (nn.Conv2d, nn.Conv3d, nn.ConvTranspose2d)):
@@ -461,6 +465,7 @@ def __init_weight(feature, bn_eps, bn_momentum, norm_layer, conv_init, **kwargs)
             nn.init.constant_(m.weight, 1)
             nn.init.constant_(m.bias, 0)
 
+
 def init_business_weight(
         module_list, bn_eps, bn_momentum, norm_layer=nn.BatchNorm2d, conv_init=nn.init.kaiming_normal_, **kwargs
 ):
@@ -469,6 +474,7 @@ def init_business_weight(
             __init_weight(feature, bn_eps, bn_momentum, norm_layer, conv_init, **kwargs)
     else:
         __init_weight(module_list, bn_eps, bn_momentum, norm_layer, conv_init, **kwargs)
+
 
 def initialize_pretrained_weight(model, settings, num_classes=1000):
     assert num_classes == settings['num_classes'], \
@@ -480,6 +486,7 @@ def initialize_pretrained_weight(model, settings, num_classes=1000):
     model.input_range = settings['input_range']
     model.mean = settings['mean']
     model.std = settings['std']
+
 
 def group_weight(module, lr, norm_layer=nn.BatchNorm2d, no_decay_lr=None):
     group_decay = []
@@ -504,17 +511,21 @@ def group_weight(module, lr, norm_layer=nn.BatchNorm2d, no_decay_lr=None):
     group2 = dict(params=group_no_decay, weight_decay=.0, lr=lr)
     return [group1, group2]
 
+
 def split_list(target_list, n):
     if isinstance(target_list, int):
         target_list = [i for i in range(target_list)]
     k, m = divmod(len(target_list), n)
-    return (target_list[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+    result = (target_list[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n))
+    return list(result)
+
 
 def random_scale(img, scale):
     sh = int(img.shape[0] * scale)
     sw = int(img.shape[1] * scale)
     img = cv2.resize(img, (sw, sh), interpolation=cv2.INTER_LINEAR)
     return img
+
 
 def generate_random_crop_pos(ori_size, crop_size):
     ori_size = get_2dshape(ori_size)
@@ -527,6 +538,7 @@ def generate_random_crop_pos(ori_size, crop_size):
     if w > crop_w:
         pos_w = np.random.randint(0, w - crop_w + 1)
     return pos_h, pos_w
+
 
 def get_2dshape(shape, *, zero=True):
     if not isinstance(shape, collections.Iterable):
@@ -542,6 +554,7 @@ def get_2dshape(shape, *, zero=True):
     assert min(shape) >= minv, 'invalid shape: {}'.format(shape)
     return shape
 
+
 def pad_image_to_shape(img, shape, border_mode, value):
     margin = np.zeros(4, np.uint32)
     shape = get_2dshape(shape)
@@ -554,6 +567,7 @@ def pad_image_to_shape(img, shape, border_mode, value):
     img = cv2.copyMakeBorder(img, margin[0], margin[1], margin[2], margin[3],
                              border_mode, value=value)
     return img, margin
+
 
 def random_crop_pad_to_shape(img, crop_pos, crop_size, pad_label_value):
     h, w = img.shape[:2]
@@ -568,11 +582,13 @@ def random_crop_pad_to_shape(img, crop_pos, crop_size, pad_label_value):
                                       pad_label_value)
     return img_, margin
 
+
 def normalize(img, mean, std):
     img = img.astype(np.float32) / 255.0
     img = img - mean
     img = img / std
     return img
+
 
 def ensure_dir(path):
     if not os.path.isdir(path):

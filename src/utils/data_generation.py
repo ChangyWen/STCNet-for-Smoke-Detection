@@ -4,7 +4,7 @@
 import cv2
 import numpy as np
 from util import load_json, split_list, random_scale, generate_random_crop_pos, \
-    random_crop_pad_to_shape, normalize, pretrained_settings
+    random_crop_pad_to_shape, normalize, get_pretrained_settings
 from torch.utils.data import Dataset, DataLoader
 
 
@@ -45,6 +45,7 @@ class BaseDataset(Dataset):
         self.scale_array = [0.5, 0.75, 1, 1.5, 1.75, 2.0]
         self.flip_array = [-1, 0, 1]
         self.rotate_array = [0, 2]
+        pretrained_settings = get_pretrained_settings()
         self.mean = pretrained_settings[backbone][pretrained]['mean']
         self.std = pretrained_settings[backbone][pretrained]['std']
 
@@ -58,6 +59,8 @@ class BaseDataset(Dataset):
         temp = self.preprocess(video_frames[indices, :, :, :])
         frames = temp[:-1]
         res_frames = temp[1:] - frames
+        frames = frames.transpose(0, 3, 1, 2).astype(np.float32)
+        res_frames = res_frames.transpose(0, 3, 1, 2).astype(np.float32)
         label = info['label']
         return dict(frames=frames, res_frames=res_frames, label=label)
 
@@ -79,7 +82,7 @@ class BaseDataset(Dataset):
                 frame = cv2.flip(frame, flip) if use_flip else cv2.rotate(frame, rotate)
                 frame = random_scale(frame, scale)
                 crop_pos = generate_random_crop_pos(frame.shape[:2], self.img_size)
-                frame = random_crop_pad_to_shape(frame, crop_pos, self.img_size, 0)
+                frame, _ = random_crop_pad_to_shape(frame, crop_pos, self.img_size, 0)
             frame = normalize(frame, self.mean, self.std)
             processed_frames.append(frame)
         return np.stack(processed_frames, axis=0)
@@ -98,6 +101,6 @@ def get_DataLoader(
         batch_size=batch_size,
         drop_last=drop_last,
         shuffle=is_shuffle,
-        pin_memory=pin_memory,
+        pin_memory=pin_memory
     )
     return data_loader

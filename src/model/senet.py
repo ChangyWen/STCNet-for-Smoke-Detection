@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import math
-from src.utils.util import pretrained_settings
 import torch.nn as nn
 from collections import OrderedDict
 

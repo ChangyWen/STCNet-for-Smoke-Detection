@@ -9,17 +9,17 @@ import torch
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import accuracy_score, precision_score, recall_score
 from network import STCNet
-from src.utils.data_generation import get_DataLoader
-from src.utils.lr_policy import PolyLR
-from src.utils.util import ensure_dir, pretrained_settings, \
+from utils.data_generation import get_DataLoader
+from utils.lr_policy import PolyLR, ExponentialLR
+from utils.util import ensure_dir, get_pretrained_settings, \
     init_business_weight, initialize_pretrained_weight, group_weight
 
 
 def train_val_run(
         device, img_height=224, img_width=224,
         backbone='50', pretrained = 'imagenet', bn_eps=1e-5, bn_momentum=0.1,
-        lr=1e-3, lr_power=0.9, backbone_lr=1e-4, backbone_lr_power=0.9, momentum=0.9, weight_decay=2e-4,
-        batch_size=4, nepochs=8, val_batch_size=4, val_per_iter=4, save_per_iter=200,
+        lr=1e-3, lr_power=0.8, backbone_lr=1e-4, backbone_lr_power=0.8, momentum=0.9, weight_decay=5e-4,
+        batch_size=4, nepochs=16, val_batch_size=4, val_per_iter=1, save_per_iter=200,
         tensorboard_dir='../tensorboard_log/', model_dir='../trained_model/'
 ):
     assert backbone in ['50', '101']
@@ -28,11 +28,12 @@ def train_val_run(
 
     '''initialization'''
     params_list = []
+    pretrained_settings = get_pretrained_settings()
     settings = pretrained_settings[backbone][pretrained]
-    for pretrained_layer in [STCNet.spatial_path, STCNet.temporal_path]:
+    for pretrained_layer in [model.spatial_path, model.temporal_path]:
         initialize_pretrained_weight(pretrained_layer, settings=settings)
         params_list += group_weight(pretrained_layer, lr=backbone_lr)
-    for business_layer in [STCNet.layer_cls, STCNet.layer_out]:
+    for business_layer in [model.layer_cls, model.layer_out]:
         init_business_weight(business_layer, bn_eps=bn_eps, bn_momentum=bn_momentum, mode='fan_in', nonlinearity='relu')
         params_list += group_weight(business_layer, lr=lr)
 
@@ -42,8 +43,9 @@ def train_val_run(
         img_height=img_height, img_width=img_width
     )
     niters_per_epoch = len(dataloader)
-    lr_policy = PolyLR(start_lr=lr, lr_power=lr_power, total_iters=nepochs * len(dataloader))
-    backbone_lr_policy = PolyLR(start_lr=backbone_lr, lr_power=backbone_lr_power, total_iters=nepochs * len(dataloader))
+
+    lr_policy = ExponentialLR(start_lr=lr, gamma=lr_power, niters_per_epoch=niters_per_epoch)
+    backbone_lr_policy = ExponentialLR(start_lr=backbone_lr, gamma=backbone_lr_power, niters_per_epoch=niters_per_epoch)
 
     val_dataloader = get_DataLoader(
         mode='validation', batch_size=val_batch_size, backbone=backbone, pretrained=pretrained,
@@ -79,10 +81,9 @@ def train_val_run(
 
             backbone_lr = backbone_lr_policy.get_lr(current_idx)
             lr = lr_policy.get_lr(current_idx)
-            optimizer.param_groups[0]['lr'] = backbone_lr
-            optimizer.param_groups[1]['lr'] = backbone_lr
-            optimizer.param_groups[2]['lr'] = lr
-            optimizer.param_groups[3]['lr'] = lr
+            for i in range(4):
+                optimizer.param_groups[i]['lr'] = backbone_lr
+                optimizer.param_groups[4 + i]['lr'] = lr
 
             loss.backward()
             optimizer.step()
@@ -112,6 +113,8 @@ def train_val_run(
 
                     val_preds, val_loss = model(rgb=frames, residual=res_frames, target=label, is_testing=False)
                     val_preds = torch.argmax(val_preds, dim=1).cpu().detach().numpy()
+                    label = label.cpu().numpy()
+                    val_preds = val_preds.cpu().numpy()
                     accuracy = accuracy_score(label, val_preds)
                     precision = precision_score(label, val_preds)
                     recall = recall_score(label, val_preds)
@@ -122,7 +125,7 @@ def train_val_run(
                     writer.add_scalar('Score/precision', precision, log_idx + 1)
                     writer.add_scalar('Score/recall', recall, log_idx + 1)
                     log_idx += 1
-
+                model.train()
             if current_idx % save_per_iter == 0 or (idx > len(pbar) - 2):
                 torch.save(model.state_dict(), model_dir + '/state_dict.pth')
                 torch.save(model, model_dir + '/model.pth')
