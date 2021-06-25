@@ -16,7 +16,8 @@ from src.utils.util import ensure_dir, pretrained_settings, \
 
 
 def train_val_run(
-        device, backbone='50', pretrained = 'imagenet', bn_eps=1e-5, bn_momentum=0.1,
+        device, img_height=224, img_width=224,
+        backbone='50', pretrained = 'imagenet', bn_eps=1e-5, bn_momentum=0.1,
         lr=1e-3, lr_power=0.9, backbone_lr=1e-4, backbone_lr_power=0.9, momentum=0.9, weight_decay=2e-4,
         batch_size=4, nepochs=8, val_batch_size=4, val_per_iter=4, save_per_iter=200,
         tensorboard_dir='../tensorboard_log/', model_dir='../trained_model/'
@@ -36,13 +37,17 @@ def train_val_run(
         params_list += group_weight(business_layer, lr=lr)
 
     optimizer = torch.optim.SGD(params_list, lr=lr, weight_decay=weight_decay, momentum=momentum)
-    dataloader = get_DataLoader(mode='train', batch_size=batch_size, backbone=backbone, pretrained=pretrained)
+    dataloader = get_DataLoader(
+        mode='train', batch_size=batch_size, backbone=backbone, pretrained=pretrained,
+        img_height=img_height, img_width=img_width
+    )
     niters_per_epoch = len(dataloader)
     lr_policy = PolyLR(start_lr=lr, lr_power=lr_power, total_iters=nepochs * len(dataloader))
     backbone_lr_policy = PolyLR(start_lr=backbone_lr, lr_power=backbone_lr_power, total_iters=nepochs * len(dataloader))
 
     val_dataloader = get_DataLoader(
-        mode='validation', batch_size=val_batch_size, backbone=backbone, pretrained=pretrained
+        mode='validation', batch_size=val_batch_size, backbone=backbone, pretrained=pretrained,
+        img_height=img_height, img_width=img_width,
     )
     bar_format = '{desc}[{elapsed}<{remaining},{rate_fmt}]'
     ensure_dir(model_dir)

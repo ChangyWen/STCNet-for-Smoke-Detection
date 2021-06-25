@@ -29,11 +29,12 @@ class BaseDataset(Dataset):
         self.data_list = []
         if split_name == 'all':
             for f in file_name:
-                self.data_list.append(load_json(f))
+                self.data_list.extend(load_json(f))
         else:
-            self.data_list.append(load_json(file_name[mapping[split_name]]))
+            self.data_list.extend(load_json(file_name[mapping[split_name]]))
         self.img_height = img_height
         self.img_width = img_width
+        self.img_size = (self.img_height, self.img_width)
 
         '''for convenience'''
         self.segs_per_clip = segs_per_clip
@@ -52,7 +53,7 @@ class BaseDataset(Dataset):
 
     def __getitem__(self, index):
         info = self.data_list[index]
-        video_frames = load_json(self.rgb_path + info['file_name'] + '.npy')
+        video_frames = np.load(self.rgb_path + info['file_name'] + '.npy')
         indices = [np.random.choice(seg) for seg in self.segs]
         temp = self.preprocess(video_frames[indices, :, :, :])
         frames = temp[:-1]
@@ -62,20 +63,23 @@ class BaseDataset(Dataset):
 
     def preprocess(self, frames):
         processed_frames = []
-        alpha = np.random.choice(self.alpha_array) if self.alpha_array else 1
-        beta = np.random.choice(self.beta_array) if self.beta_array else 0
-        scale = np.random.choice(self.scale_array) if self.scale_array else 1
-        flip = np.random.choice(self.flip_array)
-        rotate = np.random.choice(self.rotate_array)
-        use_flip = np.random.random() <= 0.5
+        use_augment = np.random.random() <= 0.3333
+        if use_augment:
+            alpha = np.random.choice(self.alpha_array) if self.alpha_array else 1
+            beta = np.random.choice(self.beta_array) if self.beta_array else 0
+            scale = np.random.choice(self.scale_array) if self.scale_array else 1
+            flip = np.random.choice(self.flip_array)
+            rotate = np.random.choice(self.rotate_array)
+            use_flip = np.random.random() <= 0.5
         for i in range(frames.shape[0]):
             frame = frames[i]
-            frame = cv2.convertScaleAbs(frame, alpha=alpha, beta=beta)
-            frame = cv2.flip(frame, flip) if use_flip else cv2.rotate(frame, rotate)
-            frame = random_scale(frame, scale)
-            crop_size = (self.img_height, self.img_width)
-            crop_pos = generate_random_crop_pos(frame.shape[:2], crop_size)
-            frame = random_crop_pad_to_shape(frame, crop_pos, crop_size, 0)
+            frame = cv2.resize(frame, self.img_size, interpolation=cv2.INTER_LINEAR)
+            if use_augment:
+                frame = cv2.convertScaleAbs(frame, alpha=alpha, beta=beta)
+                frame = cv2.flip(frame, flip) if use_flip else cv2.rotate(frame, rotate)
+                frame = random_scale(frame, scale)
+                crop_pos = generate_random_crop_pos(frame.shape[:2], self.img_size)
+                frame = random_crop_pad_to_shape(frame, crop_pos, self.img_size, 0)
             frame = normalize(frame, self.mean, self.std)
             processed_frames.append(frame)
         return np.stack(processed_frames, axis=0)
@@ -84,8 +88,11 @@ class BaseDataset(Dataset):
 def get_DataLoader(
         mode='train', backbone='se_resnext50_32x4d', pretrained='imagenet',
         batch_size=4, drop_last=True, is_shuffle=True, pin_memory=True,
+        img_height=224, img_width=224,
 ):
-    dataset = BaseDataset(mode=mode, backbone=backbone, pretrained=pretrained)
+    dataset = BaseDataset(
+        mode=mode, backbone=backbone, pretrained=pretrained, img_height=img_height, img_width=img_width
+    )
     data_loader = DataLoader(
         dataset=dataset,
         batch_size=batch_size,

@@ -1,4 +1,4 @@
-__all__=['download_videos', 'process_videos', 'split_metadata', 'util', 'optical_flow']
+__all__=['download_videos', 'process_videos', 'split_metadata', 'util', 'optical_flow', 'arg_parser']
 
 import os
 import sys

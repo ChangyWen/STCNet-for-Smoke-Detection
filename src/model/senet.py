@@ -221,6 +221,7 @@ def se_resnext50_32x4d(num_classes=1000, pretrained='imagenet'):
                   num_classes=num_classes)
     return model
 
+
 def se_resnext101_32x4d(num_classes=1000, pretrained='imagenet'):
     model = SENet(SEResNeXtBottleneck, [3, 4, 23, 3], groups=32, reduction=16,
                   dropout_p=None, inplanes=64, input_3x3=False,

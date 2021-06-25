@@ -7,19 +7,27 @@ import numpy as np
 import random
 import torch.backends.cudnn as cudnn
 from model.train_val import train_val_run
+from utils.arg_parser import init_parser
 
 if __name__ == '__main__':
     # TODO: multiple gpus
-    # TODO: arg parser
+
+    # TODO: use our own mean and std for normalization
+
+    parser = init_parser()
+    args = parser.parse_args()
+
+    gpu = args.gpu
+    seed = args.seed
+    img_height = args.img_height
+    img_width = args.img_width
 
     '''DEVICE'''
-    gpu_device = 0
-    os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpu_device)
-    torch.cuda.set_device(gpu_device)
-    device = torch.device("cuda:{}".format(gpu_device) if torch.cuda.is_available() else "cpu")
+    os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpu)
+    torch.cuda.set_device(gpu)
+    device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() else "cpu")
 
     '''REPRODUCIBILITY'''
-    seed = 0
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -28,4 +36,6 @@ if __name__ == '__main__':
         cudnn.benchmark = True
         # set cudnn.benchmark as False for REPRODUCIBILITY, at the cost of reduced performance.
 
-    train_val_run(device)
+    train_val_run(
+        device=device, img_height=img_height, img_width=img_width
+    )
