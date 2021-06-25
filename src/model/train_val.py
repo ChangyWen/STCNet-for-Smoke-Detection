@@ -19,7 +19,7 @@ def train_val_run(
         device, img_height=224, img_width=224,
         backbone='50', pretrained = 'imagenet', bn_eps=1e-5, bn_momentum=0.1,
         lr=1e-3, lr_power=0.8, backbone_lr=1e-4, backbone_lr_power=0.8, momentum=0.9, weight_decay=5e-4,
-        batch_size=4, nepochs=16, val_batch_size=4, val_per_iter=1, save_per_iter=200,
+        batch_size=4, nepochs=16, val_batch_size=48, val_per_iter=50, save_per_iter=200,
         tensorboard_dir='../tensorboard_log/', model_dir='../trained_model/'
 ):
     assert backbone in ['50', '101']

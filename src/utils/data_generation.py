@@ -67,7 +67,7 @@ class BaseDataset(Dataset):
     def preprocess(self, frames):
         processed_frames = []
         use_augment = np.random.random() <= 0.3333
-        if use_augment:
+        if use_augment and self.mode == 'train':
             alpha = np.random.choice(self.alpha_array) if self.alpha_array else 1
             beta = np.random.choice(self.beta_array) if self.beta_array else 0
             scale = np.random.choice(self.scale_array) if self.scale_array else 1
@@ -77,7 +77,7 @@ class BaseDataset(Dataset):
         for i in range(frames.shape[0]):
             frame = frames[i]
             frame = cv2.resize(frame, self.img_size, interpolation=cv2.INTER_LINEAR)
-            if use_augment:
+            if use_augment and self.mode == 'train':
                 frame = cv2.convertScaleAbs(frame, alpha=alpha, beta=beta)
                 frame = cv2.flip(frame, flip) if use_flip else cv2.rotate(frame, rotate)
                 frame = random_scale(frame, scale)
