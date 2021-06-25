@@ -113,8 +113,7 @@ def train_val_run(
 
                     val_preds, val_loss = model(rgb=frames, residual=res_frames, target=label, is_testing=False)
                     val_preds = torch.argmax(val_preds, dim=1).cpu().detach().numpy()
-                    label = label.cpu().numpy()
-                    val_preds = val_preds.cpu().numpy()
+                    label = label.cpu().detach().numpy()
                     accuracy = accuracy_score(label, val_preds)
                     precision = precision_score(label, val_preds)
                     recall = recall_score(label, val_preds)
