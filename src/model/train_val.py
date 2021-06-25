@@ -102,27 +102,42 @@ def train_val_run(
                     except (StopIteration, NameError):
                         iter_val_dataloader = iter(val_dataloader)
                         val_minibatch = iter_val_dataloader.next()
-                    frames = val_minibatch['frames']
-                    res_frames = val_minibatch['res_frames']
-                    label = val_minibatch['label']
+                    frames_val = val_minibatch['frames']
+                    res_frames_val = val_minibatch['res_frames']
+                    label_val = val_minibatch['label']
 
                     if device.type == 'cuda':
-                        frames = frames.cuda(non_blocking=True)
-                        res_frames = res_frames.cuda(non_blocking=True)
-                        label = label.cuda(non_blocking=True)
+                        frames_val = frames_val.cuda(non_blocking=True)
+                        res_frames_val = res_frames_val.cuda(non_blocking=True)
+                        label_val = label_val.cuda(non_blocking=True)
 
-                    val_preds, val_loss = model(rgb=frames, residual=res_frames, target=label, is_testing=False)
-                    val_preds = torch.argmax(val_preds, dim=1).cpu().detach().numpy()
+                    '''val'''
+                    preds_val, loss_val = model(
+                        rgb=frames_val, residual=res_frames_val, target=label_val, is_testing=False
+                    )
+                    preds_val = torch.argmax(preds_val, dim=1).cpu().detach().numpy()
+                    label_val = label_val.cpu().detach().numpy()
+                    accuracy_val = accuracy_score(label_val, preds_val)
+                    precision_val = precision_score(label_val, preds_val)
+                    recall_val = recall_score(label_val, preds_val)
+
+                    '''train'''
+                    preds = torch.argmax(preds, dim=1).cpu().detach().numpy()
                     label = label.cpu().detach().numpy()
-                    accuracy = accuracy_score(label, val_preds)
-                    precision = precision_score(label, val_preds)
-                    recall = recall_score(label, val_preds)
+                    accuracy = accuracy_score(label, preds)
+                    precision = precision_score(label, preds)
+                    recall = recall_score(label, preds)
 
                     writer.add_scalar('Loss/train', loss, log_idx + 1)
-                    writer.add_scalar('Loss/val', val_loss, log_idx + 1)
-                    writer.add_scalar('Score/accuracy', accuracy, log_idx + 1)
-                    writer.add_scalar('Score/precision', precision, log_idx + 1)
-                    writer.add_scalar('Score/recall', recall, log_idx + 1)
+                    writer.add_scalar('Loss/val', loss_val, log_idx + 1)
+
+                    writer.add_scalar('Score/accuracy_train', accuracy, log_idx + 1)
+                    writer.add_scalar('Score/precision_train', precision, log_idx + 1)
+                    writer.add_scalar('Score/recall_train', recall, log_idx + 1)
+
+                    writer.add_scalar('Score/accuracy_val', accuracy_val, log_idx + 1)
+                    writer.add_scalar('Score/precision_val', precision_val, log_idx + 1)
+                    writer.add_scalar('Score/recall_val', recall_val, log_idx + 1)
                     log_idx += 1
                 model.train()
             if current_idx % save_per_iter == 0 or (idx > len(pbar) - 2):

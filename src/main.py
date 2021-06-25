@@ -8,11 +8,13 @@ import random
 import torch.backends.cudnn as cudnn
 from model.train_val import train_val_run
 from utils.arg_parser import init_parser
+import setproctitle
 
 if __name__ == '__main__':
     # TODO: multiple gpus
     # TODO: use our own mean and std for normalization
 
+    setproctitle.setproctitle('STCNet')
     parser = init_parser()
     args = parser.parse_args()
 

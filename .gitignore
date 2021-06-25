@@ -5,7 +5,8 @@
 /src/test.py
 /output/
 /plot_src/
-__pycache__/
+/tensorboard_log/
+__pycache_
 *.py[cod]
 .DS_Store
 *.out
