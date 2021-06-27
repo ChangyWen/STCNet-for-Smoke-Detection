@@ -2,22 +2,21 @@
 # -*- coding: utf-8 -*-
 
 
-import os
 import sys
 from tqdm import tqdm
 import torch
 from torch.utils.tensorboard import SummaryWriter
-from sklearn.metrics import accuracy_score, precision_score, recall_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from network import STCNet
 from utils.data_generation import get_DataLoader
-from utils.lr_policy import PolyLR, ExponentialLR
+from utils.lr_policy import ExponentialLR
 from utils.util import ensure_dir, get_pretrained_settings, \
     init_business_weight, initialize_pretrained_weight, group_weight
 
 
 def train_val_run(
         device, img_height=224, img_width=224,
-        backbone='50', pretrained = 'imagenet', bn_eps=1e-5, bn_momentum=0.1,
+        backbone='50', pretrained='imagenet', bn_eps=1e-5, bn_momentum=0.1,
         lr=1e-3, lr_power=0.8, backbone_lr=1e-4, backbone_lr_power=0.8, momentum=0.9, weight_decay=5e-4,
         batch_size=4, nepochs=16, val_batch_size=48, val_per_iter=50, save_per_iter=200,
         tensorboard_dir='../tensorboard_log/', model_dir='../trained_model/'
@@ -66,10 +65,10 @@ def train_val_run(
 
         for idx in pbar:
             optimizer.zero_grad()
-            minibatch = iter_dataloader.next()
-            frames = minibatch['frames']
-            res_frames = minibatch['res_frames']
-            label = minibatch['label']
+            mini_batch = iter_dataloader.next()
+            frames = mini_batch['frames']
+            res_frames = mini_batch['res_frames']
+            label = mini_batch['label']
 
             if device.type == 'cuda':
                 frames = frames.cuda(non_blocking=True)
@@ -89,22 +88,22 @@ def train_val_run(
             optimizer.step()
             print_str = 'Epoch{}/{}'.format(epoch, nepochs) \
                         + ' Iter{}/{}:'.format(idx + 1, niters_per_epoch) \
-                        + ' backbone_lr={:.4f}'.format(backbone_lr)\
-                        + ' lr={:.4f}'.format(lr) \
-                        + ' loss={:.4f}'.format(loss.item())
+                        + ' backbone_lr={:.6f}'.format(backbone_lr)\
+                        + ' lr={:.6f}'.format(lr) \
+                        + ' loss={:.6f}'.format(loss.item())
             pbar.set_description(print_str, refresh=False)
 
             if current_idx % val_per_iter == 0:
                 model.eval()
                 with torch.no_grad():
                     try:
-                        val_minibatch = iter_val_dataloader.next()
+                        val_mini_batch = iter_val_dataloader.next()
                     except (StopIteration, NameError):
                         iter_val_dataloader = iter(val_dataloader)
-                        val_minibatch = iter_val_dataloader.next()
-                    frames_val = val_minibatch['frames']
-                    res_frames_val = val_minibatch['res_frames']
-                    label_val = val_minibatch['label']
+                        val_mini_batch = iter_val_dataloader.next()
+                    frames_val = val_mini_batch['frames']
+                    res_frames_val = val_mini_batch['res_frames']
+                    label_val = val_mini_batch['label']
 
                     if device.type == 'cuda':
                         frames_val = frames_val.cuda(non_blocking=True)

@@ -7,28 +7,26 @@ import numpy as np
 import random
 import torch.backends.cudnn as cudnn
 from model.train_val import train_val_run
+from model.test import test_run
 from utils.arg_parser import init_parser
 import setproctitle
 
 if __name__ == '__main__':
-    # TODO: multiple gpus
+    # TODO: distributed data parallel
     # TODO: use our own mean and std for normalization
 
     setproctitle.setproctitle('STCNet')
     parser = init_parser()
     args = parser.parse_args()
 
-    gpu = args.gpu
-    seed = args.seed
-    img_height = args.img_height
-    img_width = args.img_width
-
     '''DEVICE'''
+    gpu = args.gpu
     os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpu)
     torch.cuda.set_device(gpu)
     device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() else "cpu")
 
     '''REPRODUCIBILITY'''
+    seed = args.seed
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -37,6 +35,13 @@ if __name__ == '__main__':
         cudnn.benchmark = True
         # set cudnn.benchmark as False for REPRODUCIBILITY, at the cost of reduced performance.
 
-    train_val_run(
-        device=device, img_height=img_height, img_width=img_width
-    )
+    func_args = {
+        'device': device,
+        'img_height': args.img_height,
+        'img_width': args.img_width,
+    }
+
+    if not args.test:
+        train_val_run(**func_args)
+    else:
+        test_run(**func_args)

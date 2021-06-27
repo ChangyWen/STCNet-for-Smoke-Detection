@@ -62,7 +62,7 @@ class BaseDataset(Dataset):
         frames = frames.transpose(0, 3, 1, 2).astype(np.float32)
         res_frames = res_frames.transpose(0, 3, 1, 2).astype(np.float32)
         label = info['label']
-        return dict(frames=frames, res_frames=res_frames, label=label)
+        return dict(frames=frames, res_frames=res_frames, label=label, filename=info['file_name'])
 
     def preprocess(self, frames):
         processed_frames = []
