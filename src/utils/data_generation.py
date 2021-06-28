@@ -11,7 +11,8 @@ from torch.utils.data import Dataset, DataLoader
 class BaseDataset(Dataset):
     def __init__(
             self, split_name='all', img_height=224, img_width=224, mode='train',
-            segs_per_clip=8, backbone='se_resnext50_32x4d', pretrained='imagenet'
+            segs_per_clip=8, num_frames=36,
+            backbone='se_resnext50_32x4d', pretrained='imagenet'
     ):
         assert split_name in ['all', 's0', 's1', 's2', 's3', 's4', 's5'], split_name
         mapping = {'s0': 0, 's1': 1, 's2': 2, 's3': 3, 's4': 4, 's5': 5}
@@ -32,14 +33,16 @@ class BaseDataset(Dataset):
                 self.data_list.extend(load_json(f))
         else:
             self.data_list.extend(load_json(file_name[mapping[split_name]]))
+        self.data_list_len = len(self.data_list)
         self.img_height = img_height
         self.img_width = img_width
         self.img_size = (self.img_height, self.img_width)
 
         '''for convenience'''
-        self.segs_per_clip = segs_per_clip
-        num_frames = 36
-        self.segs = split_list(num_frames, self.segs_per_clip + 1)
+        self.segs_per_clip = segs_per_clip + 1
+        assert num_frames % self.segs_per_clip == 0
+        self.segs = split_list(num_frames, self.segs_per_clip)
+        self.frame_per_seg = num_frames // self.segs_per_clip
         self.alpha_array = [0.5, 0.75, 1, 1.25, 1.5]
         self.beta_array = [-70, -35, 0, 35, 70]
         self.scale_array = [0.5, 0.75, 1, 1.5, 1.75, 2.0]
@@ -50,19 +53,26 @@ class BaseDataset(Dataset):
         self.std = pretrained_settings[backbone][pretrained]['std']
 
     def __len__(self):
-        return len(self.data_list)
+        return self.data_list_len if self.mode == 'train' else self.data_list_len * self.frame_per_seg
 
     def __getitem__(self, index):
-        info = self.data_list[index]
+        info = self.data_list[index % self.data_list_len]
         video_frames = np.load(self.rgb_path + info['file_name'] + '.npy')
-        indices = [np.random.choice(seg) for seg in self.segs]
+        if self.mode == 'train':
+            indices = [np.random.choice(seg) for seg in self.segs]
+        else:
+            frame_idx = index // self.data_list_len
+            indices = [seg[frame_idx] for seg in self.segs]
         temp = self.preprocess(video_frames[indices, :, :, :])
         frames = temp[:-1]
         res_frames = temp[1:] - frames
         frames = frames.transpose(0, 3, 1, 2).astype(np.float32)
         res_frames = res_frames.transpose(0, 3, 1, 2).astype(np.float32)
         label = info['label']
-        return dict(frames=frames, res_frames=res_frames, label=label, filename=info['file_name'])
+        result = dict(frames=frames, res_frames=res_frames, label=label)
+        if self.mode != 'train':
+            result.update(dict(filename=info['file_name'], frame_idx=frame_idx))
+        return result
 
     def preprocess(self, frames):
         processed_frames = []

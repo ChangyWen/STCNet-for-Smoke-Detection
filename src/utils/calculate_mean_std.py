@@ -37,6 +37,7 @@ def cal_dir_stat(im_pths):
 
     return rgb_mean, rgb_std
 
+
 if __name__ == '__main__':
     setproctitle.setproctitle('cal-mean-std')
 

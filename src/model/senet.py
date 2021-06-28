@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
 import math
 import torch.nn as nn
 from collections import OrderedDict
+
 
 class Bottleneck(nn.Module):
     """
@@ -31,6 +33,7 @@ class Bottleneck(nn.Module):
 
         return out
 
+
 class SEModule(nn.Module):
 
     def __init__(self, channels, reduction):
@@ -51,6 +54,7 @@ class SEModule(nn.Module):
         x = self.fc2(x)
         x = self.sigmoid(x)
         return module_input * x
+
 
 class SEResNeXtBottleneck(Bottleneck):
     """
@@ -74,6 +78,7 @@ class SEResNeXtBottleneck(Bottleneck):
         self.se_module = SEModule(planes * 4, reduction=reduction)
         self.downsample = downsample
         self.stride = stride
+
 
 class SENet(nn.Module):
 

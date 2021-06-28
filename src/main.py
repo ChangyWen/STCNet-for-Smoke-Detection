@@ -22,8 +22,8 @@ if __name__ == '__main__':
     '''DEVICE'''
     gpu = args.gpu
     os.environ['CUDA_VISIBLE_DEVICES'] = '{}'.format(gpu)
-    torch.cuda.set_device(gpu)
-    device = torch.device("cuda:{}".format(gpu) if torch.cuda.is_available() else "cpu")
+    torch.cuda.set_device(0)
+    device = torch.device("cuda:{}".format(0) if torch.cuda.is_available() else "cpu")
 
     '''REPRODUCIBILITY'''
     seed = args.seed
@@ -44,4 +44,5 @@ if __name__ == '__main__':
     if not args.test:
         train_val_run(**func_args)
     else:
+        func_args.update({'mode': args.mode})
         test_run(**func_args)

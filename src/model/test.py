@@ -13,7 +13,7 @@ from utils.data_generation import get_DataLoader
 import pandas as pd
 
 def test_run(
-        device, img_height=224, img_width=224,
+        device, img_height=224, img_width=224, mode='test',
         backbone='50', pretrained='imagenet', batch_size=32,
         model_dir='../trained_model/', output_dir='../pred_out/'
 ):
@@ -27,8 +27,9 @@ def test_run(
     model.to(device)
     model.eval()
 
+    assert mode in ['test', 'validation']
     test_dataloader = get_DataLoader(
-        mode='test', batch_size=batch_size, backbone=backbone, pretrained=pretrained,
+        mode=mode, batch_size=batch_size, backbone=backbone, pretrained=pretrained,
         img_height=img_height, img_width=img_width, is_shuffle=False,
     )
     iter_test_dataloader = iter(test_dataloader)
@@ -40,6 +41,7 @@ def test_run(
     all_label = []
     all_preds = []
     all_filename = []
+    all_frame_idx = []
     ensure_dir(output_dir)
 
     with torch.no_grad():
@@ -49,11 +51,12 @@ def test_run(
             res_frames = mini_batch['res_frames']
             label = mini_batch['label']
             filename = mini_batch['filename']
+            frame_idx = mini_batch['frame_idx']
 
             if device.type == 'cuda':
-                frames = frames.cuda(non_blocking=True)
-                res_frames = res_frames.cuda(non_blocking=True)
-                label = label.cuda(non_blocking=True)
+                frames = frames.cuda(device=device, non_blocking=True)
+                res_frames = res_frames.cuda(device=device, non_blocking=True)
+                label = label.cuda(device=device, non_blocking=True)
 
             preds, _ = model(rgb=frames, residual=res_frames, target=label, is_testing=True)
             preds = torch.argmax(preds, dim=1).cpu().detach().numpy()
@@ -62,11 +65,13 @@ def test_run(
             all_label.append(label)
             all_preds.append(preds)
             all_filename.append(filename)
+            all_frame_idx.append(frame_idx)
 
             print_str = 'Iter{}/{}:'.format(idx + 1, niters)
             pbar.set_description(print_str, refresh=False)
 
     all_filename = np.concatenate(all_filename)
+    all_frame_idx = np.concatenate(all_frame_idx)
     all_label = np.concatenate(all_label)
     all_preds = np.concatenate(all_preds)
     accuracy = accuracy_score(all_label, all_preds)
@@ -74,11 +79,14 @@ def test_run(
     recall = recall_score(all_label, all_preds)
     f1 = f1_score(all_label, all_preds)
 
-    df = pd.DataFrame({'filename': all_filename, 'label': all_label, 'preds': all_preds})
+    df = pd.DataFrame({'filename': all_filename, 'frame_idx':all_frame_idx, 'label': all_label, 'preds': all_preds})
     df.to_csv(
-        output_dir + 'test-ACC{:.4f}-PRE{:.4f}-REC{:.4f}-F{:.4f}.csv'.format(accuracy, precision, recall, f1),
+        output_dir + '{}-New-ACC{:.4f}-PRE{:.4f}-REC{:.4f}-F{:.4f}.csv'.format(mode, accuracy, precision, recall, f1),
         sep=',', index=False, header=True
     )
-    print('Saved, ACC{:.6f}-PRE{:.6f}-REC{:.6f}-F{:.6f}.csv'.format(accuracy, precision, recall, f1))
+    print('Saved, MODE:{}, ACC{:.6f}-PRE{:.6f}-REC{:.6f}-F{:.6f}'.format(mode, accuracy, precision, recall, f1))
 
-
+    '''
+    test: ACC0.917063-PRE0.901980-REC0.873723-F0.887627
+    validation: ACC0.926242-PRE0.927103-REC0.910718-F0.918838
+    '''

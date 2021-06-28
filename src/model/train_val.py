@@ -71,9 +71,9 @@ def train_val_run(
             label = mini_batch['label']
 
             if device.type == 'cuda':
-                frames = frames.cuda(non_blocking=True)
-                res_frames = res_frames.cuda(non_blocking=True)
-                label = label.cuda(non_blocking=True)
+                frames = frames.cuda(device=device, non_blocking=True)
+                res_frames = res_frames.cuda(device=device, non_blocking=True)
+                label = label.cuda(device=device, non_blocking=True)
 
             preds, loss = model(rgb=frames, residual=res_frames, target=label, is_testing=False)
             current_idx = epoch * niters_per_epoch + idx
@@ -106,9 +106,9 @@ def train_val_run(
                     label_val = val_mini_batch['label']
 
                     if device.type == 'cuda':
-                        frames_val = frames_val.cuda(non_blocking=True)
-                        res_frames_val = res_frames_val.cuda(non_blocking=True)
-                        label_val = label_val.cuda(non_blocking=True)
+                        frames_val = frames_val.cuda(device=device, non_blocking=True)
+                        res_frames_val = res_frames_val.cuda(device=device, non_blocking=True)
+                        label_val = label_val.cuda(device=device, non_blocking=True)
 
                     '''val'''
                     preds_val, loss_val = model(
