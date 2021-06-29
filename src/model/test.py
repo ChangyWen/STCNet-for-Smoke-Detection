@@ -12,6 +12,7 @@ from utils.util import ensure_dir
 from utils.data_generation import get_DataLoader
 import pandas as pd
 
+
 def test_run(
         device, img_height=224, img_width=224, mode='test',
         backbone='50', pretrained='imagenet', batch_size=32,
@@ -89,4 +90,8 @@ def test_run(
     '''
     test: ACC0.917063-PRE0.901980-REC0.873723-F0.887627
     validation: ACC0.926242-PRE0.927103-REC0.910718-F0.918838
+    
+    New:
+    test: ACC0.917490-PRE0.900443-REC0.876863-F0.888497
+    validation: ACC0.925699-PRE0.923586-REC0.913358-F0.918443
     '''
