@@ -119,6 +119,7 @@ def train_val_run(
                     accuracy_val = accuracy_score(label_val, preds_val)
                     precision_val = precision_score(label_val, preds_val)
                     recall_val = recall_score(label_val, preds_val)
+                    f1_val = f1_score(label_val, preds_val)
 
                     '''train'''
                     preds = torch.argmax(preds, dim=1).cpu().detach().numpy()
@@ -126,6 +127,7 @@ def train_val_run(
                     accuracy = accuracy_score(label, preds)
                     precision = precision_score(label, preds)
                     recall = recall_score(label, preds)
+                    f1 = f1_score(label, preds)
 
                     writer.add_scalar('Loss/train', loss, log_idx + 1)
                     writer.add_scalar('Loss/val', loss_val, log_idx + 1)
@@ -133,10 +135,13 @@ def train_val_run(
                     writer.add_scalar('Score/accuracy_train', accuracy, log_idx + 1)
                     writer.add_scalar('Score/precision_train', precision, log_idx + 1)
                     writer.add_scalar('Score/recall_train', recall, log_idx + 1)
+                    writer.add_scalar('Score/f1_train', f1, log_idx + 1)
 
                     writer.add_scalar('Score/accuracy_val', accuracy_val, log_idx + 1)
                     writer.add_scalar('Score/precision_val', precision_val, log_idx + 1)
                     writer.add_scalar('Score/recall_val', recall_val, log_idx + 1)
+                    writer.add_scalar('Score/f1_val', f1_val, log_idx + 1)
+
                     log_idx += 1
                 model.train()
             if current_idx % save_per_iter == 0 or (idx > len(pbar) - 2):
