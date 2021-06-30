@@ -6,6 +6,10 @@
 /output/
 /plot_src/
 /tensorboard_log/
+/pred_out/
+/nohup_log/
+/ningbo/*
+*_ningbo.py
 __pycache_
 *.py[cod]
 .DS_Store
