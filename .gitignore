@@ -6,7 +6,7 @@
 /output/
 /plot_src/
 /tensorboard_log/
-/pred_out/
+/pred_out/Ningbo*
 /nohup_log/
 /src/ningbo/*
 *_ningbo.py
