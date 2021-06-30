@@ -14,7 +14,6 @@ import setproctitle
 if __name__ == '__main__':
     # TODO: distributed data parallel
     # TODO: try our own mean and std for normalization
-    # TODO: get a copy of trained model from the server
 
     setproctitle.setproctitle('STCNet')
     parser = init_parser()
