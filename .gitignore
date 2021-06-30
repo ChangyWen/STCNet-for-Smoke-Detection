@@ -8,7 +8,7 @@
 /tensorboard_log/
 /pred_out/
 /nohup_log/
-/ningbo/*
+/src/ningbo/*
 *_ningbo.py
 __pycache_
 *.py[cod]
