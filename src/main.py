@@ -38,7 +38,7 @@ if __name__ == '__main__':
     func_args = {
         'device': device,
         'img_height': args.img_height,
-        'img_width': args.img_width,
+        'img_width': args.img_width
     }
 
     if not args.test:
