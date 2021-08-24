@@ -13,5 +13,5 @@ def init_parser():
     parser.add_argument('--img_height', type=int, default=224)
     parser.add_argument('--seed', type=int, default=0)
     parser.add_argument('--test', default=False, action='store_true')
-    parser.add_argument('--mode', default='test')
+    parser.add_argument('--mode', default='test')  # 'test' or 'validation'
     return parser
