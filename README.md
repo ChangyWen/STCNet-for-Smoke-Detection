@@ -10,7 +10,7 @@
   ```bash
   bash data_preprocess.sh 320
   ```
-* Training and validating (e.g., using GPU 0)
+* Training and validating (e.g., using GPU 0). The tensorboard log, prediction outputs (on validation data), and the trained model of training and validating will be saved. 
     ```bash
     python main.py --gpu 0
     ```
