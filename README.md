@@ -23,10 +23,12 @@
     python main.py --test --mode test
     ```
 
-## Results
-* Validation dataset: 
+## Training results
+* The trained model is saved in [trained_model](./trained_model/).
+* The prediction outputs are saved in [pred_out](./pred_out/).
+* Results on validation dataset: 
   * Accuracy 0.925699 - Precision 0.923586 - Recall 0.913358 - F-score 0.918443
-* Testing dataset: 
+* Results on testing dataset: 
   * Accuracy 0.917490 - Precision 0.900443 - Recall 0.876863 - F-score 0.888497
 
 ## References
