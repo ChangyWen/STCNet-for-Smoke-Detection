@@ -7,7 +7,7 @@
 * The data we used is given by [[2]](#references). I used and modified part of the code in [CMU-CREATE-Lab/deep-smoke-machine](https://github.com/CMU-CREATE-Lab/deep-smoke-machine) for downloading and pre-processing data.
 
 ## Main Dependencies
-* [PyTorch](https://pytorch.org). The version I used was 1.9.0a0+git1fca154.
+* [PyTorch](https://pytorch.org). The version I used was 1.9.0a0+git1fca154. Please note that the stable version 1.9.0 has been available by the time I shared this repo, which should be better.
 
 ## Usage
 * Download and pre-process data (videos with 320 by 320 resolutions)
