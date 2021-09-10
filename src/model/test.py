@@ -7,7 +7,7 @@ from tqdm import tqdm
 import numpy as np
 import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from network import STCNet
+from .network import STCNet
 from utils.util import ensure_dir
 from utils.data_generation import get_DataLoader
 import pandas as pd

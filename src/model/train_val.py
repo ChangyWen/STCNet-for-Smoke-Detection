@@ -7,7 +7,7 @@ from tqdm import tqdm
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from network import STCNet
+from .network import STCNet
 from utils.data_generation import get_DataLoader
 from utils.lr_policy import ExponentialLR
 from utils.util import ensure_dir, get_pretrained_settings, \

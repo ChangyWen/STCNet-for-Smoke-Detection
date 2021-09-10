@@ -3,7 +3,7 @@
 
 import cv2
 import numpy as np
-from util import load_json, split_list, random_scale, generate_random_crop_pos, \
+from .util import load_json, split_list, random_scale, generate_random_crop_pos, \
     random_crop_pad_to_shape, normalize, get_pretrained_settings
 from torch.utils.data import Dataset, DataLoader
 

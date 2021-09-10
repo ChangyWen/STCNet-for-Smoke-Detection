@@ -5,7 +5,7 @@
 import torch
 import torch.nn as nn
 from collections import OrderedDict
-from senet import se_resnext50_32x4d, se_resnext101_32x4d
+from .senet import se_resnext50_32x4d, se_resnext101_32x4d
 
 
 class STCNet(nn.Module):

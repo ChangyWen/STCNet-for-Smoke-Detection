@@ -3,7 +3,7 @@
 
 import sys
 import urllib.request
-from util import *
+from .util import *
 
 '''
 json sample

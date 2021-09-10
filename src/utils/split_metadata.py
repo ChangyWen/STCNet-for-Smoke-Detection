@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from util import *
+from .util import *
 
 def split_and_save_data(vm, target_key_type, method="assign", no_link=False):
     # Index metadata by date or camera

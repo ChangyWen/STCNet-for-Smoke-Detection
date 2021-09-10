@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import sys
-from util import *
+from .util import *
 from optical_flow.optical_flow import OpticalFlow
 from multiprocessing import Pool
 
